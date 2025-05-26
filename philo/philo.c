@@ -6,7 +6,7 @@
 /*   By: diogribe <diogribe@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/02 14:41:42 by diogribe          #+#    #+#             */
-/*   Updated: 2025/04/07 16:53:14 by diogribe         ###   ########.fr       */
+/*   Updated: 2025/05/26 18:45:51 by diogribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,20 +14,19 @@
 
 void	clean_exit(t_vars *vars)
 {
-	for (int i = 0; i < vars->n_philos; i++)
-		pthread_mutex_destroy(&vars->forks[i]);
-
-	pthread_mutex_destroy(&vars->print_mutex);
-	pthread_mutex_destroy(&vars->death_mutex);
-
-	free(vars->forks);
+	if (vars->philos)
+	{
+		pthread_mutex_destroy(&vars->print_mutex);
+		pthread_mutex_destroy(&vars->death_mutex);
+		pthread_mutex_destroy(&vars->fork_manager_mutex);
+	}
+	free(vars->fork_available);
 	free(vars->philos);
 }
 
 bool	init_vars(t_vars *vars, int ac, char **av)
 {
-	if (ac < 5)
-		return (false);
+	int	i;
 
 	vars->n_philos = ft_atoi(av[1]);
 	vars->t_die = ft_atoi(av[2]);
@@ -35,31 +34,42 @@ bool	init_vars(t_vars *vars, int ac, char **av)
 	vars->t_sleep = ft_atoi(av[4]);
 	vars->dead = false;
 	vars->start_time = get_time_ms();
-
-	// Alocar arrays
-	vars->forks = malloc(sizeof(pthread_mutex_t) * vars->n_philos);
-	vars->philos = malloc(sizeof(t_philo) * vars->n_philos);
-	if (!vars->forks || !vars->philos)
+	if (ac == 6)
+		vars->meals_required = ft_atoi(av[5]);
+	else
+		vars->meals_required = -1;
+	if (vars->n_philos <= 0 || vars->t_die <= 0 || vars->t_eat <= 0
+		|| vars->t_sleep <= 0 || (ac == 6 && vars->meals_required <= 0))
 		return (false);
-
-	// Inicializar mutexes
+	vars->philos = malloc(sizeof(t_philo) * vars->n_philos);
+	vars->fork_available = malloc(sizeof(bool) * vars->n_philos);
+	if (!vars->philos || !vars->fork_available)
+	{
+		free(vars->philos);
+		free(vars->fork_available);
+		return (false);
+	}
 	pthread_mutex_init(&vars->print_mutex, NULL);
 	pthread_mutex_init(&vars->death_mutex, NULL);
-	for (int i = 0; i < vars->n_philos; i++)
-		pthread_mutex_init(&vars->forks[i], NULL);
-
+	pthread_mutex_init(&vars->fork_manager_mutex, NULL);
+	i = 0;
+	while (i < vars->n_philos)
+		vars->fork_available[i++] = true;
 	return (true);
 }
 
 void	init_philos(t_vars *vars)
 {
-	int i = 0;
+	int i;
+
+	i = 0;
 	while (i < vars->n_philos)
 	{
 		vars->philos[i].id = i + 1;
+		vars->philos[i].meals_eaten = 0;
 		vars->philos[i].vars = vars;
-		vars->philos[i].left_fork = &vars->forks[i];
-		vars->philos[i].right_fork = &vars->forks[(i + 1) % vars->n_philos];
+		vars->philos[i].left_fork_idx = i;
+		vars->philos[i].right_fork_idx = (i + 1) % vars->n_philos;
 		vars->philos[i].last_meal_time = get_time_ms();
 		i++;
 	}
@@ -67,28 +77,20 @@ void	init_philos(t_vars *vars)
 
 void	philo_maker(t_vars *vars)
 {
-	int	i;
 	pthread_t	monitor;
+	int			i;
 
 	i = 0;
 	while (i < vars->n_philos)
 	{
-		vars->philos[i].id = i + 1;
-		vars->philos[i].last_meal_time = get_time_ms();
-		vars->philos[i].left_fork = &vars->forks[i];
-		vars->philos[i].right_fork = &vars->forks[(i + 1) % vars->n_philos];
-		vars->philos[i].vars = vars;
-
-		if (pthread_create(&vars->philos[i].thread, NULL, &routine, &vars->philos[i]) != 0)
-			printf("Error creating thread\n");
+		if (pthread_create(&vars->philos[i].thread, NULL, &routine,
+			&vars->philos[i]) != 0)
+			exit_with_error(vars, "Error creating philosopher thread\n");
 		i++;
 	}
-	// 🔍 Criação do monitor de morte
 	if (pthread_create(&monitor, NULL, &monitor_death, vars) != 0)
-		printf("Error creating monitor thread\n");
-	// Espera o monitor
+		exit_with_error(vars, "Error creating monitor thread\n");
 	pthread_join(monitor, NULL);
-	// 🧵 Espera os filósofos
 	i = 0;
 	while (i < vars->n_philos)
 	{
@@ -101,9 +103,11 @@ int	main(int ac, char **av)
 {
 	t_vars	vars;
 
+	memset(&vars, 0, sizeof(t_vars));
+	if (ac < 5 || ac > 6)
+		return (exit_with_error(&vars, "Error: Invalid number of arguments\n"));
 	if (!init_vars(&vars, ac, av))
 		return (exit_with_error(&vars, "Error initializing vars\n"));
-
 	init_philos(&vars);
 	philo_maker(&vars);
 	clean_exit(&vars);
