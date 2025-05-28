@@ -6,7 +6,7 @@
 /*   By: diogribe <diogribe@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/04 15:58:01 by diogribe          #+#    #+#             */
-/*   Updated: 2025/05/23 15:16:45 by diogribe         ###   ########.fr       */
+/*   Updated: 2025/05/28 12:18:55 by diogribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,12 +52,17 @@ int	exit_with_error(t_vars *vars, const char *msg)
 	return (1);
 }
 
-size_t ft_strlen(const char *s)
+size_t	ft_strlen(const char *s)
 {
-	size_t i;
+	size_t	i;
 
 	i = 0;
 	while (s[i])
 		i++;
 	return (i);
+}
+
+long long	time_since_start(t_vars *vars)
+{
+	return (get_time_ms() - vars->start_time);
 }

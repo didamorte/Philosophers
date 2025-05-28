@@ -6,20 +6,15 @@
 /*   By: diogribe <diogribe@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 15:20:18 by diogribe          #+#    #+#             */
-/*   Updated: 2025/05/26 17:34:48 by diogribe         ###   ########.fr       */
+/*   Updated: 2025/05/28 12:22:39 by diogribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-long long	time_since_start(t_vars *vars)
-{
-	return (get_time_ms() - vars->start_time);
-}
-
 bool	is_dead(t_vars *vars)
 {
-	bool value;
+	bool	value;
 
 	pthread_mutex_lock(&vars->death_mutex);
 	value = vars->dead;

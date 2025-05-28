@@ -6,7 +6,7 @@
 /*   By: diogribe <diogribe@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/02 14:41:42 by diogribe          #+#    #+#             */
-/*   Updated: 2025/05/26 18:45:51 by diogribe         ###   ########.fr       */
+/*   Updated: 2025/05/28 13:52:04 by diogribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,24 +34,8 @@ bool	init_vars(t_vars *vars, int ac, char **av)
 	vars->t_sleep = ft_atoi(av[4]);
 	vars->dead = false;
 	vars->start_time = get_time_ms();
-	if (ac == 6)
-		vars->meals_required = ft_atoi(av[5]);
-	else
-		vars->meals_required = -1;
-	if (vars->n_philos <= 0 || vars->t_die <= 0 || vars->t_eat <= 0
-		|| vars->t_sleep <= 0 || (ac == 6 && vars->meals_required <= 0))
+	if (init_vars_utils(vars, ac, av) == false)
 		return (false);
-	vars->philos = malloc(sizeof(t_philo) * vars->n_philos);
-	vars->fork_available = malloc(sizeof(bool) * vars->n_philos);
-	if (!vars->philos || !vars->fork_available)
-	{
-		free(vars->philos);
-		free(vars->fork_available);
-		return (false);
-	}
-	pthread_mutex_init(&vars->print_mutex, NULL);
-	pthread_mutex_init(&vars->death_mutex, NULL);
-	pthread_mutex_init(&vars->fork_manager_mutex, NULL);
 	i = 0;
 	while (i < vars->n_philos)
 		vars->fork_available[i++] = true;
@@ -60,7 +44,7 @@ bool	init_vars(t_vars *vars, int ac, char **av)
 
 void	init_philos(t_vars *vars)
 {
-	int i;
+	int	i;
 
 	i = 0;
 	while (i < vars->n_philos)
@@ -84,7 +68,7 @@ void	philo_maker(t_vars *vars)
 	while (i < vars->n_philos)
 	{
 		if (pthread_create(&vars->philos[i].thread, NULL, &routine,
-			&vars->philos[i]) != 0)
+				&vars->philos[i]) != 0)
 			exit_with_error(vars, "Error creating philosopher thread\n");
 		i++;
 	}

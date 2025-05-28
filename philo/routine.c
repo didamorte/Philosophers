@@ -6,7 +6,7 @@
 /*   By: diogribe <diogribe@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 14:13:20 by diogribe          #+#    #+#             */
-/*   Updated: 2025/05/26 18:51:24 by diogribe         ###   ########.fr       */
+/*   Updated: 2025/05/28 13:42:33 by diogribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,8 @@ void	print_status(t_philo *philo, char *status)
 	if (!is_dead(philo->vars))
 	{
 		pthread_mutex_lock(&philo->vars->print_mutex);
-		printf("%lld %d %s\n", time_since_start(philo->vars), philo->id, status);
+		printf("%lld %d %s\n", time_since_start(philo->vars),
+			philo->id, status);
 		pthread_mutex_unlock(&philo->vars->print_mutex);
 	}
 }
@@ -30,25 +31,11 @@ void	eat(t_philo *philo)
 	while (!has_eaten_this_turn && !is_dead(philo->vars))
 	{
 		pthread_mutex_lock(&philo->vars->fork_manager_mutex);
-		if (philo->vars->n_philos > 1 &&
-			philo->vars->fork_available[philo->left_fork_idx] &&
-			philo->vars->fork_available[philo->right_fork_idx])
+		if (philo->vars->n_philos > 1
+			&& philo->vars->fork_available[philo->left_fork_idx]
+			&& philo->vars->fork_available[philo->right_fork_idx])
 		{
-			philo->vars->fork_available[philo->left_fork_idx] = false;
-			philo->vars->fork_available[philo->right_fork_idx] = false;
-			pthread_mutex_unlock(&philo->vars->fork_manager_mutex);
-			print_status(philo, "has taken a fork");
-			print_status(philo, "has taken a fork");
-			pthread_mutex_lock(&philo->vars->death_mutex);
-			philo->last_meal_time = get_time_ms();
-			philo->meals_eaten++;
-			pthread_mutex_unlock(&philo->vars->death_mutex);
-			print_status(philo, "is eating");
-			usleep(philo->vars->t_eat * 1000);
-			pthread_mutex_lock(&philo->vars->fork_manager_mutex);
-			philo->vars->fork_available[philo->left_fork_idx] = true;
-			philo->vars->fork_available[philo->right_fork_idx] = true;
-			pthread_mutex_unlock(&philo->vars->fork_manager_mutex);
+			eat_utils(philo);
 			has_eaten_this_turn = true;
 		}
 		else
@@ -74,8 +61,9 @@ void	think(t_philo *philo)
 
 void	*routine(void *arg)
 {
-	t_philo *philo = (t_philo *)arg;
+	t_philo	*philo;
 
+	philo = (t_philo *)arg;
 	if (philo->id % 2 == 0)
 		usleep(philo->vars->t_eat * 5);
 	while (!is_dead(philo->vars))
