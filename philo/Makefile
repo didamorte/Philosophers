@@ -2,36 +2,32 @@ NAME	:= philo
 CC		:= cc
 FLAGS	:= -Wall -Wextra -Werror -g -pthread
 
-# Folder Paths
-PHILO_DIR	:= philo
-
 # Source Files
-SRCS := philo.c \
+SRCS_FILES := philo.c \
 		utils.c \
 		routine.c \
 		death.c \
 		extra_utils.c
 
-OBJS := $(SRCS:.c=.o)
+OBJS := $(SRCS_FILES:.c=.o)
 
 # Main Target
 all: $(NAME)
 
-# Executable Creation
+# Final binary outside philo/
 $(NAME): $(OBJS)
-	@echo "Compiling $(NAME)..."
 	$(CC) $(FLAGS) -o $@ $^
 
-# Compilation Rule
+# Object compilation
 %.o: %.c
 	$(CC) $(FLAGS) -c $< -o $@
 
 # Cleaning Rules
 clean:
-	rm -f $(OBJS)
+	@rm -f $(OBJS)
 
 fclean: clean
-	rm -f $(NAME)
+	@rm -f $(NAME)
 
 re: fclean all
 
