@@ -6,7 +6,7 @@
 /*   By: diogribe <diogribe@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 14:13:20 by diogribe          #+#    #+#             */
-/*   Updated: 2025/06/04 16:13:00 by diogribe         ###   ########.fr       */
+/*   Updated: 2025/06/09 16:36:45 by diogribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,8 @@ void	print_status(t_philo *philo, char *status)
 {
 	pthread_mutex_lock(&philo->vars->print_mutex);
 	if (!is_dead(philo->vars))
-		printf("%lld %d %s\n", time_since_start(philo->vars), philo->id, status);
+		printf("%lld %d %s\n", time_since_start(philo->vars),
+			philo->id, status);
 	pthread_mutex_unlock(&philo->vars->print_mutex);
 }
 
